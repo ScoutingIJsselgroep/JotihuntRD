@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        
+        <!-- Define Bootstrap -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+        
+        <!-- Load ladda -->
+        <link rel="stylesheet" href="dist/ladda-themeless.min.css">
+        <script src="dist/spin.min.js"></script>
+        <script src="dist/ladda.min.js"></script>
+        <!-- Define css/style.css -->
+        <link rel="stylesheet" href="css/style.css">
+        
+        <script src="http://jotihunt.net/js/deelgebied.php"></script>
+        
+        <!-- Page title -->
+        <title>Jotihunt Converter</title>
+        
+        <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
+        
+        <!-- RD to WGS conversion using Javascript  -->
+        <script type="text/javascript">
+            function rdtowgs (x, y) {
+                var dX;
+                var dY;
+                var SomN;
+                var SomE;
+                dX = (x*10 - 155000) * Math.pow(10, -5);
+                dY = (y*10 - 463000) * Math.pow(10, -5);
+                SomN = (3235.65389 * dY) + ( -32.58297 * Math.pow(dX, 2)) + (-0.2475 *  Math.pow(dY, 2)) + (-0.84978 *  Math.pow(dX, 2) * dY) + (-0.0655 * Math.pow(dY, 3)) + (-0.01709 * Math.pow(dX, 2) * Math.pow(dY, 2)) + (-0.00738 * dX) + (0.0053 * Math.pow(dX, 4)) + (-0.00039 * Math.pow(dX, 2) * Math.pow(dY, 3)) + (0.00033 * Math.pow(dX, 4) * dY) + (-0.00012 *  dX * dY);;
+                SomE = (5260.52916 * dX) + (105.94684 * dX * dY) + (2.45656 * dX * Math.pow(dY, 2)) + (-0.81885 * Math.pow(dX, 3)) + (0.05594 * dX * Math.pow(dY, 3)) + (-0.05607 * Math.pow(dX, 3) * dY) + (0.01199 * dY) + (-0.00256 * Math.pow(dX, 3) * Math.pow(dY, 2)) + (0.00128 * dX * Math.pow(dY, 4)) + (0.00022 * Math.pow(dY,2)) + (-0.00022 * Math.pow(dX, 2)) + (0.00026 * Math.pow(dX, 5));
+                var latitude = 52.15517 + (SomN / 3600);
+                var longtitude = 5.387206 + (SomE / 3600);
+                
+               return latitude + "," + longtitude;
+            }
+           
+       
+            var geocoder;
+            var map;
+            var infowindow = new google.maps.InfoWindow();
+            var marker;
+            
+            function initialize() {
+              geocoder = new google.maps.Geocoder();
+              var latlng = new google.maps.LatLng(52.1278081,5.9134614);
+              var mapOptions = {
+                zoom: 9,
+                center: latlng,
+                mapTypeId: 'roadmap'
+              }
+              
+              map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+              drawDeelgebieden(map);
+            }
+            
+            function changedValues(){
+                var latitude;
+                var longtitude;
+                var latlng;
+                latitude = document.getElementById('latitude').value;
+                longtitude = document.getElementById('longtitude').value;
+                if(latitude.length == 5 && longtitude.length == 5){
+                    document.getElementById("loadingbar").style.width="100%";
+                    document.getElementById("loadingbarwrapper").style.display="block";
+                    document.getElementById("latitude").className =   document.getElementById("latitude").className.replace( /(?:^|\s)Wrong(?!\S)/g , '' );
+                    latlng = rdtowgs(latitude, longtitude);
+                    codeLatLng(latlng);
+                    Ladda.bind( 'input[type=submit]' );
+                }else{
+                    document.getElementById("latitude").className += " Wrong"
+                }
+            }
+            function background(){
+                document.body.style.background = '#BBBBBB';
+            }
+            function codeLatLng(input) {
+              var latlngStr = input.split(",",2);
+              var lat = parseFloat(latlngStr[0]);
+              var lng = parseFloat(latlngStr[1]);
+              var latlng = new google.maps.LatLng(lat, lng);
+              document.getElementById("loadingbar").style.width="25%";
+              geocoder.geocode({'latLng': latlng}, function(results, status) {
+                  document.getElementById("loadingbar").style.width="50%";
+                 
+
+                if (status == google.maps.GeocoderStatus.OK) {
+                  if (results[1]) {
+                    map.setZoom(11);
+                    marker = new google.maps.Marker({
+                        position: latlng,
+                        map: map
+                    });
+                    map.panTo( new google.maps.LatLng( lat, lng ) );
+                    document.getElementById("locatiepanel").innerHTML = results[0].formatted_address;
+                    document.getElementById("loadingbar").style.width="100%";
+                  } else {
+                    alert('No results found');
+                  }
+                } else {
+                  alert('Geocoder failed due to: ' + status);
+                }
+              });
+              setInterval(function () {
+                  
+                    document.getElementById("loadingbarwrapper").style.display="none";}, 3000);
+              
+              return true;
+              
+            }
+            
+            google.maps.event.addDomListener(window, 'load', initialize);
+
+        </script>
+        
+    </head>
+    <body id="testid">
+        <!-- Navbar, only contains an  -->
+        <nav class="navbar navbar-default" role="navigation">
+            <!-- Added wrapper class in order to set the max width of the content of the navbar -->
+            <div class="wrapper">
+                <div class="navbar-header">
+                  <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                  </button>
+                  <a class="navbar-brand" onclick="background()" href="#">JotihuntRD</a>
+                </div>
+            </div>
+        </nav>
+        <!-- Loading Bar -->
+        <div class="progress wrapper" id="loadingbarwrapper">
+           <div id="loadingbar" class="progress-bar" role="progressbar" aria-valuenow="60" 
+              aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+              <span class="sr-only">40% Complete</span>
+           </div>
+        </div>
+        <!-- Content. Added row for a nice, responsive grid system -->
+        <div class="wrapper row content container">
+            <!-- Input section -->
+            <div class="col-md-3">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label for="latitude">Latitude</label>
+                            <input onchange="changedValues()" type="text" class="form-control" id="latitude" placeholder="21000">
+                        </div>
+                        <div class="form-group">
+                            <label for="longtitude">Longtitude</label>
+                            <input onchange="changedValues()" type="text" class="form-control" id="longtitude" placeholder="45000">
+                        </div>
+                        <button onclick="changedValues()" type="submit" class="btn btn-default">Verstuur</button>
+                  </div>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                         <div id="panel">
+                            <label>Locatie</label>
+                             <div id="locatiepanel">Vul eerst waarden in!</div>
+                        </div>
+                            
+
+                  </div>
+                </div>
+            </div>
+            <!-- Google Maps display section -->
+            <div class="col-md-9">
+                <div class="panel panel-default">
+                  <div class="panel-body">
+                    <div id="map-canvas"></div>
+                  </div>
+                </div>
+            </div>
+             <div id="spacer"></div>
+        </div>
+       	<div class="footer">
+		  <div class="wrapper footer">
+            <a data-icon="octicon-eye" data-style="mega" href="https://github.com/tristandb/tristandb" class="github-button">Watch</a>
+            
+            <a href="https://github.com/tristandb" data-style="mega" class="github-button">Follow @tristandb</a>
+		    <!-- Place this tag where you want the button to render. -->
+<a data-style="mega" data-icon="octicon-cloud-download" href="https://github.com/tristandb/tristandb/archive/master.zip" class="github-button">Download</a><br>
+		 
+		     
+		  </div>
+		</div>
+		<!-- Place this tag right after the last button or just before your close body tag. -->
+<script async defer id="github-bjs" src="https://buttons.github.io/buttons.js"></script>
+    </body>
+</html>
